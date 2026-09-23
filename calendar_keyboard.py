@@ -240,7 +240,7 @@ def build_calendar(
 
             date_str = current_date.isoformat()
 
-            # Дата поза дозволеним періодом
+
             if current_date < today:
                 row.append(
                     InlineKeyboardButton(
@@ -281,7 +281,7 @@ def build_calendar(
 
     navigation = []
 
-    # Назад
+
     if (year, month) > (
         current_year,
         current_month
@@ -300,7 +300,7 @@ def build_calendar(
             )
         )
 
-    # Вперед
+
     if (year, month) < (
         next_year,
         next_month

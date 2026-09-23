@@ -1,7 +1,7 @@
 from aiogram import Router, F
 from aiogram.types import CallbackQuery, Message
 
-from config import ADMIN_ID, PORTFOLIO_URL
+from config import ID, PORTFOLIO_URL
 
 from keyboards import (
     main_menu_keyboard,
@@ -16,7 +16,7 @@ router = Router()
 @router.message(F.text == "/start")
 async def start_handler(message: Message):
 
-    is_admin = message.from_user.id == ADMIN_ID
+    is_admin = message.from_user.id == ID
 
     await message.answer(
         (
@@ -37,7 +37,7 @@ async def main_menu_callback(
     callback: CallbackQuery
 ):
 
-    is_admin = callback.from_user.id == ADMIN_ID
+    is_admin = callback.from_user.id == ID
 
     await callback.message.edit_text(
         (

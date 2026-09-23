@@ -2,12 +2,7 @@ from datetime import datetime
 
 
 def format_date(date_string: str):
-    """
-    Перетворює:
-    2026-09-23
-    ->
-    23.09.2026
-    """
+
 
     date_object = datetime.strptime(
         date_string,
@@ -20,9 +15,7 @@ def format_date(date_string: str):
 
 
 def validate_phone(phone: str):
-    """
-    Проста перевірка номера телефону.
-    """
+
 
     phone = phone.strip()
 

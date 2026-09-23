@@ -9,7 +9,7 @@ from aiogram.fsm.storage.memory import (
     MemoryStorage
 )
 
-from config import BOT_TOKEN
+from config import TOKEN
 
 from database import init_db
 
@@ -25,27 +25,17 @@ from handlers.admin import router as admin_router
 
 async def main():
 
-    # ==============================
-    # База даних
-    # ==============================
-
     await init_db()
 
-    # ==============================
-    # Bot / Dispatcher
-    # ==============================
 
     bot = Bot(
-        token=BOT_TOKEN
+        token=TOKEN
     )
 
     dp = Dispatcher(
         storage=MemoryStorage()
     )
 
-    # ==============================
-    # Routers
-    # ==============================
 
     dp.include_router(
         user_router
@@ -59,14 +49,8 @@ async def main():
         admin_router
     )
 
-    # ==============================
-    # Scheduler
-    # ==============================
-
     scheduler.start()
 
-    # Відновлюємо нагадування
-    # після перезапуску
     await restore_reminders(
         bot
     )

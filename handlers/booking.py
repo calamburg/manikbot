@@ -10,7 +10,7 @@ from aiogram.fsm.state import StatesGroup, State
 
 from datetime import date
 
-from config import ADMIN_ID, CHANNEL_ID
+from config import ID
 
 from database import (
     get_work_days,
@@ -566,7 +566,7 @@ async def confirm_booking(
                 "❌ Не вдалося створити запис."
             ),
             reply_markup=main_menu_keyboard(
-                callback.from_user.id == ADMIN_ID
+                callback.from_user.id == ID
             )
         )
 
@@ -600,14 +600,14 @@ async def confirm_booking(
             "Чекаємо на вас ❤️"
         ),
         reply_markup=main_menu_keyboard(
-            callback.from_user.id == ADMIN_ID
+            callback.from_user.id == ID
         ),
         parse_mode="HTML"
     )
 
     # Повідомлення адміністратору
     await callback.bot.send_message(
-        ADMIN_ID,
+        ID,
         (
             "🔔 <b>НОВИЙ ЗАПИС</b>\n\n"
             f"💅 Послуга: <b>{booking['service']}</b>\n"
@@ -647,7 +647,7 @@ async def cancel_booking_process(
     await callback.message.edit_text(
         "❌ Запис скасовано.",
         reply_markup=main_menu_keyboard(
-            callback.from_user.id == ADMIN_ID
+            callback.from_user.id == ID
         )
     )
 
@@ -677,7 +677,7 @@ async def my_booking(
                 "Оберіть дату та час, щоб записатися."
             ),
             reply_markup=main_menu_keyboard(
-                callback.from_user.id == ADMIN_ID
+                callback.from_user.id == ID
             ),
             parse_mode="HTML"
         )
@@ -751,14 +751,14 @@ async def user_cancel_booking(
                 "Цей час знову доступний для запису."
             ),
             reply_markup=main_menu_keyboard(
-                callback.from_user.id == ADMIN_ID
+                callback.from_user.id == ID
             ),
             parse_mode="HTML"
         )
 
         # Повідомлення адміністратору
         await callback.bot.send_message(
-            ADMIN_ID,
+            ID,
             (
                 "❌ <b>КЛІЄНТ СКАСУВАВ ЗАПИС</b>\n\n"
                 f"💅 Послуга: <b>{cancelled['service']}</b>\n"

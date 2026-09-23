@@ -14,7 +14,7 @@ from aiogram.fsm.state import StatesGroup, State
 from calendar_keyboard import build_admin_delete_slot_calendar, build_admin_open_day_calendar
 from calendar_keyboard import build_admin_slot_calendar, build_admin_schedule_calendar
 from calendar_keyboard import build_admin_calendar, build_admin_close_day_calendar
-from config import ADMIN_ID
+from config import ID
 
 from database import (
     add_work_day,
@@ -35,48 +35,20 @@ from utils import format_date
 
 router = Router()
 
-
-# =========================================================
-# ПЕРЕВІРКА АДМІНІСТРАТОРА
-# =========================================================
-
 def is_admin(user_id: int) -> bool:
-    """
-    Перевіряє, чи є користувач адміністратором.
-    """
-
-    return user_id == ADMIN_ID
 
 
-# =========================================================
-# FSM СТАНИ АДМІНІСТРАТОРА
-# =========================================================
+    return user_id == ID
 
 class AdminStates(StatesGroup):
 
-    # Додавання робочого дня
     waiting_work_day = State()
-
-    # Додавання слота
     waiting_slot_date = State()
     waiting_slot_time = State()
-
-    # Видалення слота
     waiting_delete_slot_date = State()
-
-    # Закриття дня
     waiting_close_date = State()
-
-    # Відкриття дня
     waiting_open_date = State()
-
-    # Перегляд розкладу
     waiting_schedule_date = State()
-
-
-# =========================================================
-# КЛАВІАТУРА АДМІН-ПАНЕЛІ
-# =========================================================
 
 def admin_panel_keyboard():
 
@@ -127,11 +99,6 @@ def admin_panel_keyboard():
         ]
     )
 
-
-# =========================================================
-# ВІДКРИТТЯ АДМІН-ПАНЕЛІ
-# =========================================================
-
 @router.callback_query(F.data == "admin_panel")
 async def open_admin_panel(
     callback: CallbackQuery,
@@ -148,7 +115,7 @@ async def open_admin_panel(
 
         return
 
-    # На всякий випадок очищаємо старий FSM
+
     await state.clear()
 
     await callback.message.edit_text(
@@ -162,10 +129,6 @@ async def open_admin_panel(
 
     await callback.answer()
 
-
-# =========================================================
-# ЗАКРИТТЯ / СКАСУВАННЯ FSM
-# =========================================================
 
 @router.callback_query(F.data == "admin:cancel")
 async def cancel_admin_action(
@@ -190,10 +153,6 @@ async def cancel_admin_action(
     await callback.answer()
 
 
-# =========================================================
-# ДОПОМІЖНА КНОПКА НАЗАД
-# =========================================================
-
 def admin_cancel_keyboard():
 
     return InlineKeyboardMarkup(
@@ -206,11 +165,6 @@ def admin_cancel_keyboard():
             ]
         ]
     )
-
-
-# =========================================================
-# 1. ДОДАВАННЯ РОБОЧОГО ДНЯ
-# =========================================================
 
 @router.callback_query(F.data == "admin:add_day")
 async def start_add_work_day(
@@ -254,14 +208,6 @@ async def select_admin_workday(
             text="✅ Робочий день додано!",
             reply_markup=admin_panel_keyboard())
     await callback.answer()
-
-
-
-
-
-# =========================================================
-# 2. ДОДАВАННЯ ЧАСОВОГО СЛОТА
-# =========================================================
 
 @router.callback_query(F.data == "admin:add_slot")
 async def start_add_slot(
@@ -328,7 +274,7 @@ async def get_slot_date(
 
         return
 
-    # Перевіряємо, чи існує робочий день
+
     work_day = await get_work_day(
         selected_date.isoformat()
     )
@@ -441,11 +387,6 @@ async def save_slot(
         parse_mode="HTML"
     )
 
-
-# =========================================================
-# 3. ВИДАЛЕННЯ ЧАСОВОГО СЛОТА
-# =========================================================
-
 @router.callback_query(F.data == "admin:delete_slot")
 async def start_delete_slot(
     callback: CallbackQuery,
@@ -531,8 +472,7 @@ async def show_slots_for_delete(
 
     for slot in slots:
 
-        # Якщо слот вже заброньований —
-        # не дозволяємо його видаляти
+
         if slot["booking_id"]:
 
             buttons.append([
@@ -601,11 +541,6 @@ async def confirm_delete_slot(
     await callback.answer(
         "Слот видалено."
     )
-
-
-# =========================================================
-# 4. ЗАКРИТТЯ ДНЯ
-# =========================================================
 
 @router.callback_query(F.data == "admin:close_day")
 async def start_close_day(
@@ -753,10 +688,6 @@ async def select_close_day(
     )
 
     await callback.answer()
-
-# =========================================================
-# 5. ВІДКРИТТЯ ДНЯ
-# =========================================================
 
 @router.callback_query(F.data == "admin:open_day")
 async def start_open_day(
@@ -927,11 +858,6 @@ async def open_day(
         parse_mode="HTML"
     )
 
-
-# =========================================================
-# 6. ПЕРЕГЛЯД РОЗКЛАДУ
-# =========================================================
-
 @router.callback_query(F.data == "admin:view_schedule")
 async def start_view_schedule(
     callback: CallbackQuery,
@@ -1063,11 +989,6 @@ async def change_schedule_calendar(
 
     await callback.answer()
 
-
-# =========================================================
-# 7. ІГНОРУВАТИ КНОПКУ
-# =========================================================
-
 @router.callback_query(F.data == "admin:ignore")
 async def admin_ignore(
     callback: CallbackQuery
@@ -1079,11 +1000,6 @@ async def admin_ignore(
     await callback.answer(
         "🔴 Цей слот вже зайнятий."
     )
-
-
-# =========================================================
-# 8. СКАСУВАННЯ ЗАПИСУ АДМІНІСТРАТОРОМ
-# =========================================================
 
 @router.callback_query(
     F.data.startswith("admin:cancel_booking:")
@@ -1099,7 +1015,7 @@ async def admin_cancel_booking(
         callback.data.split(":")[2]
     )
 
-    # Скасовуємо запис у БД
+
     booking = await cancel_booking(
         booking_id
     )
@@ -1113,14 +1029,10 @@ async def admin_cancel_booking(
 
         return
 
-    # Видаляємо нагадування
+
     remove_reminder(
         booking_id
     )
-
-    # -----------------------------------------------------
-    # Повідомляємо клієнта
-    # -----------------------------------------------------
 
     try:
 
@@ -1141,10 +1053,6 @@ async def admin_cancel_booking(
         print(
             f"Не вдалося повідомити клієнта: {error}"
         )
-
-    # -----------------------------------------------------
-    # Оновлюємо повідомлення адміна
-    # -----------------------------------------------------
 
     await callback.message.edit_text(
         (

@@ -3,20 +3,8 @@ import aiosqlite
 from config import DATABASE_PATH
 
 
-# =========================================================
-# ПІДКЛЮЧЕННЯ ДО БАЗИ
-# =========================================================
-
 async def get_db():
-    """
-    Створює підключення до SQLite.
 
-    row_factory дозволяє звертатися до колонок
-    за їх назвами:
-
-    row["work_date"]
-    row["slot_time"]
-    """
 
     db = await aiosqlite.connect(
         DATABASE_PATH
@@ -32,14 +20,8 @@ async def get_db():
     return db
 
 
-# =========================================================
-# СТВОРЕННЯ ТАБЛИЦЬ
-# =========================================================
-
 async def init_db():
-    """
-    Створює таблиці при першому запуску бота.
-    """
+
 
     db = await get_db()
 
@@ -107,20 +89,10 @@ async def init_db():
     await db.commit()
     await db.close()
 
-
-# =========================================================
-# РОБОЧІ ДНІ
-# =========================================================
-
 async def add_work_day(
     work_date: str
 ):
-    """
-    Додає робочий день.
 
-    Якщо день вже існує —
-    нічого не робить.
-    """
 
     db = await get_db()
 
@@ -142,9 +114,7 @@ async def add_work_day(
 async def get_work_day(
     work_date: str
 ):
-    """
-    Отримує інформацію про конкретний день.
-    """
+
 
     db = await get_db()
 
@@ -165,9 +135,7 @@ async def get_work_day(
 
 
 async def get_work_days():
-    """
-    Повертає всі робочі дні.
-    """
+
 
     db = await get_db()
 
@@ -189,14 +157,7 @@ async def get_work_days():
 async def close_work_day(
     work_date: str
 ):
-    """
-    Повністю закриває день.
 
-    Важливо:
-    записи клієнтів НЕ видаляються.
-    Просто день перестає бути доступним
-    для нових записів.
-    """
 
     db = await get_db()
 
@@ -216,9 +177,7 @@ async def close_work_day(
 async def reopen_work_day(
     work_date: str
 ):
-    """
-    Знову відкриває робочий день.
-    """
+
 
     db = await get_db()
 
@@ -234,21 +193,11 @@ async def reopen_work_day(
     await db.commit()
     await db.close()
 
-
-# =========================================================
-# ЧАСОВІ СЛОТИ
-# =========================================================
-
 async def add_slot(
     work_date: str,
     slot_time: str
 ):
-    """
-    Додає часовий слот.
 
-    UNIQUE(work_date, slot_time)
-    не дозволить створити однаковий слот двічі.
-    """
 
     db = await get_db()
 
@@ -273,12 +222,7 @@ async def add_slot(
 async def delete_slot(
     slot_id: int
 ):
-    """
-    Видаляє часовий слот.
 
-    Адмін-панель перед цим перевіряє,
-    чи не зайнятий слот.
-    """
 
     db = await get_db()
 
@@ -297,17 +241,7 @@ async def delete_slot(
 async def get_slots_for_date(
     work_date: str
 ):
-    """
-    Повертає всі слоти конкретного дня.
 
-    Додатково повертається booking_id.
-
-    Якщо booking_id IS NULL —
-    слот вільний.
-
-    Якщо booking_id має значення —
-    слот зайнятий.
-    """
 
     db = await get_db()
 
@@ -342,12 +276,7 @@ async def get_slots_for_date(
 async def get_free_slots(
     work_date: str
 ):
-    """
-    Повертає тільки вільні слоти.
 
-    Закритий день також не повинен
-    віддавати слоти клієнту.
-    """
 
     db = await get_db()
 
@@ -385,16 +314,10 @@ async def get_free_slots(
     return result
 
 
-# =========================================================
-# БРОНЮВАННЯ
-# =========================================================
-
 async def user_has_booking(
     user_id: int
 ):
-    """
-    Перевіряє, чи є у користувача активний запис.
-    """
+
 
     db = await get_db()
 
@@ -418,9 +341,7 @@ async def user_has_booking(
 async def get_user_booking(
     user_id: int
 ):
-    """
-    Повертає активний запис користувача.
-    """
+
 
     return await user_has_booking(
         user_id
@@ -430,9 +351,7 @@ async def get_user_booking(
 async def get_booking(
     booking_id: int
 ):
-    """
-    Повертає запис за його ID.
-    """
+
 
     db = await get_db()
 
@@ -460,37 +379,16 @@ async def create_booking(
     work_date: str,
     slot_time: str
 ):
-    """
-    Створює бронювання.
 
-    Повертає:
-
-        (True, "success")
-
-    або:
-
-        (False, причина)
-
-    Використовується транзакція BEGIN IMMEDIATE,
-    щоб два користувачі не змогли одночасно
-    зайняти один слот.
-    """
 
     db = await get_db()
 
     try:
 
-        # -------------------------------------------------
-        # Блокуємо операцію запису
-        # -------------------------------------------------
 
         await db.execute(
             "BEGIN IMMEDIATE"
         )
-
-        # -------------------------------------------------
-        # Перевірка: користувач вже має запис?
-        # -------------------------------------------------
 
         cursor = await db.execute(
             """
@@ -513,10 +411,6 @@ async def create_booking(
                 "already_booked"
             )
 
-        # -------------------------------------------------
-        # Перевірка робочого дня
-        # -------------------------------------------------
-
         cursor = await db.execute(
             """
             SELECT
@@ -538,10 +432,6 @@ async def create_booking(
                 "day_not_available"
             )
 
-        # -------------------------------------------------
-        # День закритий?
-        # -------------------------------------------------
-
         if work_day["is_closed"]:
 
             await db.rollback()
@@ -550,10 +440,6 @@ async def create_booking(
                 False,
                 "day_closed"
             )
-
-        # -------------------------------------------------
-        # Перевірка існування слота
-        # -------------------------------------------------
 
         cursor = await db.execute(
             """
@@ -579,10 +465,6 @@ async def create_booking(
                 "slot_not_found"
             )
 
-        # -------------------------------------------------
-        # Перевірка, чи слот вже зайнятий
-        # -------------------------------------------------
-
         cursor = await db.execute(
             """
             SELECT id
@@ -607,10 +489,6 @@ async def create_booking(
                 False,
                 "slot_taken"
             )
-
-        # -------------------------------------------------
-        # Створення запису
-        # -------------------------------------------------
 
         await db.execute(
             """
@@ -652,10 +530,6 @@ async def create_booking(
         await db.close()
 
 
-# =========================================================
-# ОТРИМАННЯ ЗАПИСІВ
-# =========================================================
-
 async def get_bookings_for_date(
     work_date: str
 ):
@@ -683,12 +557,7 @@ async def get_bookings_for_date(
 
 
 async def get_all_future_bookings():
-    """
-    Повертає всі майбутні записи.
 
-    Використовується scheduler.py
-    для відновлення нагадувань після запуску бота.
-    """
 
     db = await get_db()
 
@@ -706,27 +575,16 @@ async def get_all_future_bookings():
 
     return result
 
-
-# =========================================================
-# СКАСУВАННЯ ЗАПИСУ
-# =========================================================
-
 async def cancel_booking(
     booking_id: int
 ):
-    """
-    Скасовує запис.
 
-    Повертає дані скасованого запису,
-    щоб scheduler та handlers могли
-    використати їх після видалення.
-    """
 
     db = await get_db()
 
     try:
 
-        # Спочатку отримуємо запис
+
         cursor = await db.execute(
             """
             SELECT *
@@ -742,7 +600,7 @@ async def cancel_booking(
 
             return None
 
-        # Видаляємо запис
+
         await db.execute(
             """
             DELETE FROM bookings
